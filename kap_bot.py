@@ -21,7 +21,7 @@ def kap_fon_ozeti_al():
         options.add_argument('--disable-dev-shm-usage')
         
         # GitHub Linux sunucusunda varsayılan Chrome'u kullanacak
-        driver = uc.Chrome(options=options)
+        driver = uc.Chrome(options=options, version_main=151)
         
         driver.get(url)
         time.sleep(5) 
