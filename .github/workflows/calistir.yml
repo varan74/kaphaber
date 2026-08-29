@@ -1,0 +1,27 @@
+name: KAP Bot
+
+on:
+  schedule:
+    - cron: '0 15 * * *' # Her gün Türkiye saati ile 18:00'de otomatik çalışır
+  workflow_dispatch: # İstediğin zaman manuel çalıştırma butonu ekler
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Python Kurulumu
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Gerekli Kütüphaneleri Yükle
+        run: |
+          pip install undetected-chromedriver selenium google-genai gspread
+          
+      - name: Botu Çalıştır
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        run: python kap_bot.py
