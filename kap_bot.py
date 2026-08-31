@@ -1,7 +1,5 @@
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
+from curl_cffi import requests
 import json
-import time
 from google import genai
 import gspread
 import datetime
@@ -12,34 +10,14 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def kap_fon_ozeti_al():
     url = "https://www.kap.org.tr/tr/api/disclosures"
-    print("Bağlanılıyor...")
+    print("KAP'a bağlanılıyor...")
     
     try:
-        options = uc.ChromeOptions()
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920,1080')
-        
-        # headless=True kaldırıldı, sanal ekranda açılacak
-        driver = uc.Chrome(
-            options=options, 
-            version_main=151,
-            use_subprocess=True
-        )
-        
-        driver.get(url)
-        time.sleep(5) 
-        
-        icerik = driver.find_element(By.TAG_NAME, "body").text
-        veri = json.loads(icerik)
-        driver.quit()
+        # Chrome açmak yerine doğrudan Chrome 120'nin ağ imzasını taklit ediyoruz
+        response = requests.get(url, impersonate="chrome120", timeout=30)
+        veri = response.json()
     except Exception as e:
         print(f"Bağlantı hatası: {e}")
-        try:
-            driver.quit()
-        except:
-            pass
         return
     
     fon_haberleri = []
