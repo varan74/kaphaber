@@ -14,7 +14,7 @@ def kap_fon_ozeti_al():
     url = "https://www.kap.org.tr/tr/api/disclosures"
     print("Bağlanılıyor...")
     
-  try:
+    try:
         options = uc.ChromeOptions()
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
