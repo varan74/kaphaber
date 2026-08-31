@@ -19,11 +19,12 @@ def kap_fon_ozeti_al():
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
+        options.add_argument('--window-size=1920,1080')
         
+        # headless=True kaldırıldı, sanal ekranda açılacak
         driver = uc.Chrome(
             options=options, 
             version_main=151,
-            headless=True, 
             use_subprocess=True
         )
         
@@ -66,7 +67,6 @@ def kap_fon_ozeti_al():
         return
     
     try:
-        # JSON dosyasını GitHub Secrets üzerinden sanal olarak okuyor
         gcp_creds = json.loads(os.environ.get("GCP_CREDENTIALS"))
         gc = gspread.service_account_from_dict(gcp_creds)
         
