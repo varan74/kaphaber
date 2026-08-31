@@ -14,14 +14,18 @@ def kap_fon_ozeti_al():
     url = "https://www.kap.org.tr/tr/api/disclosures"
     print("Bağlanılıyor...")
     
-    try:
+  try:
         options = uc.ChromeOptions()
-        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
         
-        # GitHub Linux sunucusunda varsayılan Chrome'u kullanacak
-        driver = uc.Chrome(options=options, version_main=151)
+        driver = uc.Chrome(
+            options=options, 
+            version_main=151,
+            headless=True, 
+            use_subprocess=True
+        )
         
         driver.get(url)
         time.sleep(5) 
@@ -31,6 +35,10 @@ def kap_fon_ozeti_al():
         driver.quit()
     except Exception as e:
         print(f"Bağlantı hatası: {e}")
+        try:
+            driver.quit()
+        except:
+            pass
         return
     
     fon_haberleri = []
