@@ -5,16 +5,15 @@ import gspread
 import datetime
 import os
 
-# API anahtarını GitHub Secrets'tan alıyor
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def kap_fon_ozeti_al():
     url = "https://www.kap.org.tr/tr/api/disclosures"
-    print("KAP'a bağlanılıyor...")
+    print("Bağlanılıyor...")
     
     try:
-        # Chrome açmak yerine doğrudan Chrome 120'nin ağ imzasını taklit ediyoruz
-        response = requests.get(url, impersonate="chrome120", timeout=30)
+        # impersonate="chrome" parametresi ile Cloudflare engelini aşıyoruz
+        response = requests.get(url, impersonate="chrome", timeout=30)
         veri = response.json()
     except Exception as e:
         print(f"Bağlantı hatası: {e}")
