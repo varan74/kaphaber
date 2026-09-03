@@ -1,65 +1,59 @@
-import pandas as pd
-from borsapy.market import get_kap_provider
+import requests
+import json
 from google import genai
 import gspread
 import datetime
 import os
-import json
+import urllib.parse
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def kap_fon_ozeti_al():
-    print("borsapy üzerinden KAP'a bağlanılıyor...")
+    print("GitHub IP engelini aşmak için Proxy kanalları deneniyor...")
     
-    try:
-        # Doğru modülü çağırdık
-        kap = get_kap_provider()
-        
-        # İçindeki kullanılabilir metodları loga yazdırıyoruz (hata ayıklamak için)
-        metodlar = [m for m in dir(kap) if not m.startswith('_')]
-        print("Mevcut KAP Metodları:", metodlar)
-        
-        # Olası metod isimlerini akıllıca deniyoruz
-        df_kap = None
-        if hasattr(kap, 'get_daily_disclosures'):
-            df_kap = kap.get_daily_disclosures()
-        elif hasattr(kap, 'get_disclosures'):
-            df_kap = kap.get_disclosures()
-        else:
-            print("KAP bildirimlerini çeken metod bulunamadı. Lütfen logdaki 'Mevcut KAP Metodları' çıktısını paylaşın.")
-            return
+    hedef_url = "https://www.kap.org.tr/tr/api/disclosures"
+    kodlanmis_url = urllib.parse.quote(hedef_url, safe='')
+    
+    # Cloudflare engellerini aşmak için sırayla denenecek 3 farklı ücretsiz proxy kanalı
+    proxy_kanallari = [
+        f"https://api.allorigins.win/raw?url={kodlanmis_url}",
+        f"https://api.codetabs.com/v1/proxy?quest={hedef_url}",
+        f"https://corsproxy.io/?{kodlanmis_url}"
+    ]
+    
+    veri = None
+    for kanal in proxy_kanallari:
+        try:
+            isim = kanal.split('/')[2]
+            print(f"Denenen kanal: {isim}")
             
-    except Exception as e:
-        print(f"KAP verisi çekilirken hata oluştu: {e}")
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            response = requests.get(kanal, headers=headers, timeout=20)
+            
+            if response.status_code == 200:
+                try:
+                    veri = response.json()
+                    print(f"Bağlantı BAŞARILI! Veri {isim} üzerinden çekildi.")
+                    break # Başarılı olursa diğer proxy'leri denemeden döngüden çık
+                except json.JSONDecodeError:
+                    print("Bu kanal Cloudflare engeline takıldı, diğerine geçiliyor.")
+        except Exception as e:
+            print(f"Kanal başarısız: {e}")
+            
+    if not veri:
+        print("Tüm proxy kanalları başarısız oldu. KAP API'si geçici olarak yanıt vermiyor olabilir.")
         return
-    
-    if df_kap is None or (isinstance(df_kap, pd.DataFrame) and df_kap.empty) or len(df_kap) == 0:
-        print("Bugün KAP'a düşen yeni bir bildirim bulunamadı.")
-        return
-
+        
     fon_haberleri = []
+    for bildirim in veri:
+        basic = bildirim.get("basic", {})
+        sirket = basic.get("companyName", "") or ""
+        baslik = basic.get("title", basic.get("subject", "")) or ""
+        
+        if "FON" in sirket.upper() or "PORTFÖY" in sirket.upper() or "FON" in baslik.upper():
+            link = f"https://www.kap.org.tr/tr/Bildirim/{basic.get('disclosureIndex')}"
+            fon_haberleri.append(f"Şirket: {sirket}\nBaşlık: {baslik}\nLink: {link}")
     
-    # Gelen veri Pandas DataFrame ise
-    if isinstance(df_kap, pd.DataFrame):
-        for index, row in df_kap.iterrows():
-            sirket = str(row.get('companyName', row.get('company', ''))).upper()
-            baslik = str(row.get('title', row.get('subject', ''))).upper()
-            
-            if "FON" in sirket or "PORTFÖY" in sirket or "FON" in baslik:
-                idx = row.get('disclosureIndex', row.get('index', ''))
-                link = f"https://www.kap.org.tr/tr/Bildirim/{idx}"
-                fon_haberleri.append(f"Şirket: {sirket}\nBaşlık: {baslik}\nLink: {link}")
-    # Gelen veri JSON (Sözlük) listesi ise
-    else:
-        for row in df_kap:
-            sirket = str(row.get('companyName', row.get('company', ''))).upper()
-            baslik = str(row.get('title', row.get('subject', ''))).upper()
-            
-            if "FON" in sirket or "PORTFÖY" in sirket or "FON" in baslik:
-                idx = row.get('disclosureIndex', row.get('index', ''))
-                link = f"https://www.kap.org.tr/tr/Bildirim/{idx}"
-                fon_haberleri.append(f"Şirket: {sirket}\nBaşlık: {baslik}\nLink: {link}")
-
     if not fon_haberleri:
         print("Bugün KAP'a düşen yeni bir 'fon' bildirimi bulunamadı.")
         return
