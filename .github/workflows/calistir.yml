@@ -16,9 +16,9 @@ jobs:
         with:
           python-version: '3.10'
           
-      - name: Kütüphaneleri Yükle
+      - name: Gerekli Kütüphaneleri Yükle
         run: |
-          pip install curl_cffi google-genai gspread
+          pip install borsapy pandas google-genai gspread
           
       - name: Botu Çalıştır
         env:
