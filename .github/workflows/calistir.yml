@@ -18,7 +18,7 @@ jobs:
           
       - name: Gerekli Kütüphaneleri Yükle
         run: |
-          pip install borsapy pandas google-genai gspread
+          pip install requests google-genai gspread
           
       - name: Botu Çalıştır
         env:
