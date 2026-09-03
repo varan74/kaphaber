@@ -1,4 +1,4 @@
-import borsapy
+from borsapy import kap  # Modülü doğrudan içe aktardık
 import pandas as pd
 from google import genai
 import gspread
@@ -12,9 +12,15 @@ def kap_fon_ozeti_al():
     print("borsapy ile KAP verileri çekiliyor...")
     
     try:
-        df_kap = borsapy.kap.get_daily_disclosures() 
+        # Doğrudan kap modülünü kullanıyoruz
+        df_kap = kap.get_daily_disclosures() 
     except Exception as e:
         print(f"KAP verisi çekilirken hata oluştu: {e}")
+        # Hata durumunda metod isimlerini görmek için:
+        try:
+            print("Mevcut metodlar:", dir(kap))
+        except:
+            pass
         return
     
     if df_kap is None or df_kap.empty:
